@@ -1,9 +1,8 @@
 from pathlib import Path
 
-import numpy as np
 import pygame
 
-from asteroids.action import Action
+from asteroids.agent import AsteroidsAgent
 from asteroids.cli.asteroids_cli import main_cli
 from asteroids.cli.common_flags import (
     chance_option,
@@ -12,7 +11,6 @@ from asteroids.cli.common_flags import (
     width_option,
 )
 from asteroids.env import AsteroidsEnv
-from asteroids.models import load_critic
 
 
 @main_cli.command("auto-play")
@@ -30,7 +28,14 @@ def auto_play_cli(width, height, chance, growth):
         asteroids_chance_growth=growth,
         init_pygame=True,
     )
-    critic_model = load_critic(env=env, path=Path.cwd() / "critic_model.hdf5")
+    agent = AsteroidsAgent(
+        env=env,
+        batch_size=0,
+        gamma=0,
+        learning_rate=0,
+        max_episode_moves=0,
+    )
+    agent.target_critic.load_weights(Path.cwd() / "critic_model.hdf5")
     running = True
     clock = pygame.time.Clock()
     while running:
@@ -44,12 +49,9 @@ def auto_play_cli(width, height, chance, growth):
         env.render()
         if not env.lost:
             state = env.state
-            state_tf = state.reshape((-1, *env.state_shape))
-            state_tf = np.repeat(state_tf, repeats=len(Action), axis=0)
-            action_tf = np.identity(len(Action))
-            critic_value = critic_model([state_tf, action_tf])
-            critic_value = np.squeeze(critic_value)
-            action = Action(np.argmax(critic_value))
+            action = agent.get_action(
+                state=state, explore_factor=0, epsilon=0, use_target=True
+            )
             env.step(action)
 
         clock.tick(5)

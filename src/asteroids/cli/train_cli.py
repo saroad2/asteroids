@@ -61,9 +61,7 @@ def train_cli(
     agent = AsteroidsAgent(
         env=env,
         batch_size=batch_size,
-        epsilon=epsilon,
         gamma=gamma,
-        explore_factor=explore_factor,
         learning_rate=learning_rate,
         max_episode_moves=max_episode_moves,
     )
@@ -72,22 +70,23 @@ def train_cli(
     plots_dir = Path.cwd() / "plots"
     plots_dir.mkdir(exist_ok=True)
     model_path = Path.cwd() / "critic_model.hdf5"
+    click.echo(agent.critic.summary())
     with tqdm.trange(episodes) as bar:
         for ep in bar:
-            agent.run_episode()
+            agent.run_episode(explore_factor=explore_factor, epsilon=epsilon)
             losses.append(agent.learn())
             moves.append(env.moves)
             update_target(target=agent.target_critic, model=agent.critic, tau=tau)
-            agent.explore_factor *= explore_decay
-            if agent.explore_factor < 1e-5:
-                agent.explore_factor = 0
+            explore_factor *= explore_decay
+            if explore_factor < 1e-5:
+                explore_factor = 0
 
             loss_mean = np.mean(losses[-window_size:])
             moves_mean = np.mean(moves[-window_size:])
             bar.set_description(
                 f"Loss mean: {loss_mean:.2f}, "
                 f"Moves mean: {moves_mean:.2f}, "
-                f"Explore factor: {agent.explore_factor:.2f}"
+                f"Explore factor: {explore_factor:.2f}"
             )
             if len(moves) > window_size and moves_mean >= moves_stop:
                 break

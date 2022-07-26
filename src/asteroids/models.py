@@ -1,15 +1,7 @@
-from pathlib import Path
-
 from keras import Model, layers
 
 from asteroids.action import Action
 from asteroids.env import AsteroidsEnv
-
-
-def load_critic(env: AsteroidsEnv, path: Path) -> Model:
-    model = get_critic(env)
-    model.load_weights(path)
-    return model
 
 
 def get_critic(env: AsteroidsEnv) -> Model:

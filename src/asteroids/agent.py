@@ -14,16 +14,12 @@ class AsteroidsAgent:
         self,
         env: AsteroidsEnv,
         batch_size: int,
-        epsilon: float,
         gamma: float,
-        explore_factor: float,
         learning_rate: float,
         max_episode_moves: int,
     ):
         self.env = env
         self.gamma = gamma
-        self.epsilon = epsilon
-        self.explore_factor = explore_factor
         self.max_episode_moves = max_episode_moves
 
         self.buffer = Buffer(
@@ -46,14 +42,16 @@ class AsteroidsAgent:
         self.counts = np.ones(shape=len(Action))
         return self.env.reset()
 
-    def run_episode(self):
+    def run_episode(self, explore_factor: float, epsilon: float):
         state = self.reset()
         states = []
         actions = []
         rewards = []
         next_states = []
         for i in range(self.max_episode_moves):
-            action = self.get_action(state)
+            action = self.get_action(
+                state, explore_factor=explore_factor, epsilon=epsilon
+            )
             next_state, reward, done, _ = self.env.step(action)
             states.append(state)
             actions.append(action.to_vector())
@@ -70,24 +68,30 @@ class AsteroidsAgent:
                 state=state, action=action, reward=reward, next_state=next_state
             )
 
-    def get_action(self, state):
-        if np.random.uniform() < self.epsilon:
+    def get_action(self, state, explore_factor, epsilon, use_target: bool = False):
+        if np.random.uniform() < epsilon:
             action_index = np.random.choice(len(Action))
             return Action(action_index)
         state_tf = state.reshape((-1, *self.env.state_shape))
         state_tf = np.repeat(state_tf, repeats=len(Action), axis=0)
         action_tf = np.identity(len(Action))
-        critic_value = self.critic([state_tf, action_tf])
+        critic_model = self.target_critic if use_target else self.critic
+        critic_value = critic_model([state_tf, action_tf])
         critic_value = np.squeeze(critic_value)
         counts_sum_log = np.log(self.counts_sum)
-        explore_value = self.explore_factor * counts_sum_log / self.counts
+        explore_value = explore_factor * counts_sum_log / self.counts
         action_index = np.argmax(critic_value + explore_value)
         return Action(action_index)
 
     def learn(self):
         state, action, rewards, next_states = self.buffer.batch()
         next_actions = np.array(
-            [self.get_action(state).to_vector() for state in next_states]
+            [
+                self.get_action(
+                    state, explore_factor=0, epsilon=0, use_target=True
+                ).to_vector()
+                for state in next_states
+            ]
         )
         with tf.GradientTape() as tape:
             actual_values = self.critic([state, action])
