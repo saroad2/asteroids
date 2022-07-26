@@ -32,6 +32,7 @@ from asteroids.plotting import plot_moving_average
 @click.option("-l", "--learning-rate", type=float, default=0.001)
 @click.option("--max-episode-moves", type=int, default=100)
 @click.option("-m", "--moves-stop", type=int, default=80)
+@click.option("--checkpoint", type=int, default=1_000)
 def train_cli(
     width: int,
     height: int,
@@ -47,7 +48,8 @@ def train_cli(
     explore_decay: float,
     learning_rate: float,
     max_episode_moves: int,
-    moves_stop,
+    moves_stop: int,
+    checkpoint: int,
 ):
     env = AsteroidsEnv(
         width=width,
@@ -66,8 +68,11 @@ def train_cli(
     )
     losses = []
     moves = []
+    plots_dir = Path.cwd() / "plots"
+    plots_dir.mkdir(exist_ok=True)
+    model_path = Path.cwd() / "critic_model.hdf5"
     with tqdm.trange(episodes) as bar:
-        for _ in bar:
+        for ep in bar:
             agent.run_episode()
             losses.append(agent.learn())
             moves.append(env.moves)
@@ -79,13 +84,23 @@ def train_cli(
             loss_mean = np.mean(losses[-window_size:])
             moves_mean = np.mean(moves[-window_size:])
             bar.set_description(
-                f"Loss mean: {loss_mean:.2f}, " f"moves_mean: {moves_mean:.2f}"
+                f"Loss mean: {loss_mean:.2f}, "
+                f"Moves mean: {moves_mean:.2f}, "
+                f"Explore factor: {agent.explore_factor:.2f}"
             )
             if len(moves) > window_size and moves_mean >= moves_stop:
                 break
+            if (ep + 1) % checkpoint == 0:
+                plot_moving_average(
+                    losses, window=window_size, name="loss", output_dir=plots_dir
+                )
+                plot_moving_average(
+                    moves, window=window_size, name="moves", output_dir=plots_dir
+                )
+                agent.target_critic.save_weights(model_path)
+                click.echo(f"Saved model checkpoint in {model_path}")
 
-    plots_dir = Path.cwd() / "plots"
-    plots_dir.mkdir(exist_ok=True)
     plot_moving_average(losses, window=window_size, name="loss", output_dir=plots_dir)
     plot_moving_average(moves, window=window_size, name="moves", output_dir=plots_dir)
-    agent.target_critic.save_weights(Path.cwd() / "critic_model.hdf5")
+    agent.target_critic.save_weights(model_path)
+    click.echo(f"Final model was saved in {model_path}")
