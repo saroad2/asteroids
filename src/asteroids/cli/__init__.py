@@ -1,1 +1,1 @@
-from asteroids.cli.asteroids_cli import main_cli
+from asteroids.cli.asteroids_cli import main_cli  # noqa

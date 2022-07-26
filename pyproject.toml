@@ -15,6 +15,7 @@ pygame = "^2.1.2"
 
 [tool.poetry.dev-dependencies]
 black = "^22.6.0"
+pre-commit = "^2.20.0"
 
 [tool.poetry.scripts]
 asteroids = "asteroids.__main__:main_cli"
