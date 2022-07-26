@@ -1,8 +1,8 @@
 import numpy as np
 import tensorflow as tf
-from tensorflow.keras import Model, layers
-from tensorflow.keras.losses import Huber
-from tensorflow.keras.optimizers import Adam
+from keras import Model, layers
+from keras.losses import Huber
+from keras.optimizers import Adam
 
 from asteroids.action import Action
 from asteroids.buffer import Buffer
@@ -15,14 +15,12 @@ class AsteroidsAgent:
         env: AsteroidsEnv,
         batch_size: int,
         epsilon: float,
-        tau: float,
         gamma: float,
         explore_factor: float,
         learning_rate: float,
         max_episode_moves: int,
     ):
         self.env = env
-        self.tau = tau
         self.gamma = gamma
         self.epsilon = epsilon
         self.explore_factor = explore_factor
@@ -33,6 +31,8 @@ class AsteroidsAgent:
             batch_size=batch_size,
         )
         self.critic = self.get_critic()
+        self.target_critic = self.get_critic()
+        self.target_critic.set_weights(self.critic.get_weights())
         self.optimizer = Adam(learning_rate=learning_rate)
         self.loss_func = Huber(reduction=tf.keras.losses.Reduction.SUM)
 
@@ -51,19 +51,24 @@ class AsteroidsAgent:
         states = []
         actions = []
         rewards = []
+        next_states = []
         for i in range(self.max_episode_moves):
             action = self.get_action(state)
-            state, reward, done, _ = self.env.step(action)
+            next_state, reward, done, _ = self.env.step(action)
             states.append(state)
             actions.append(action.to_vector())
             rewards.append(reward)
+            next_states.append(next_state)
             if done:
                 break
-        rewards = rewards[::-1]
-        values = [reward * np.power(self.gamma, i) for i, reward in enumerate(rewards)]
-        values = np.cumsum(values)
-        for state, action, value in zip(states, actions, values):
-            self.buffer.record(state, action, value)
+            state = next_state
+
+        for state, action, reward, next_state in zip(
+            states, actions, rewards, next_states
+        ):
+            self.buffer.record(
+                state=state, action=action, reward=reward, next_state=next_state
+            )
 
     def get_action(self, state):
         if np.random.uniform() < self.epsilon:
@@ -80,15 +85,24 @@ class AsteroidsAgent:
         return Action(action_index)
 
     def learn(self):
-        state, action, values = self.buffer.batch()
+        state, action, rewards, next_states = self.buffer.batch()
+        next_actions = np.array(
+            [self.get_action(state).to_vector() for state in next_states]
+        )
         with tf.GradientTape() as tape:
             actual_values = self.critic([state, action])
-            loss = self.loss_func(actual_values, values)
+            next_values = self.target_critic([next_states, next_actions])
+            expected_values = rewards + self.gamma * next_values
+            loss = self.loss_func(actual_values, expected_values)
 
         grads = tape.gradient(loss, self.critic.trainable_variables)
         self.optimizer.apply_gradients(zip(grads, self.critic.trainable_variables))
 
         return loss
+
+    def update_target(self, tau):
+        for a_target, a in zip(self.target_critic.weights, self.critic.weights):
+            a_target.assign(tau * a_target + (1 - tau) * a)
 
     def get_critic(self) -> Model:
         state_input = layers.Input(shape=self.env.state_shape)

@@ -57,7 +57,6 @@ def train_cli(
         env=env,
         batch_size=batch_size,
         epsilon=epsilon,
-        tau=tau,
         gamma=gamma,
         explore_factor=explore_factor,
         learning_rate=learning_rate,
@@ -70,15 +69,17 @@ def train_cli(
             agent.run_episode()
             losses.append(agent.learn())
             moves.append(env.moves)
+            agent.update_target(tau)
             loss_mean = np.mean(losses[-window_size:])
             moves_mean = np.mean(moves[-window_size:])
             bar.set_description(
                 f"Loss mean: {loss_mean:.2f}, " f"moves_mean: {moves_mean:.2f}"
             )
-            if moves_mean >= moves_stop:
+            if len(moves) > window_size and moves_mean >= moves_stop:
                 break
+
     plots_dir = Path.cwd() / "plots"
     plots_dir.mkdir(exist_ok=True)
     plot_moving_average(losses, window=window_size, name="loss", output_dir=plots_dir)
     plot_moving_average(moves, window=window_size, name="moves", output_dir=plots_dir)
-    agent.critic.save_weights(Path.cwd() / "critic_model.hdf5")
+    agent.target_critic.save_weights(Path.cwd() / "critic_model.hdf5")
