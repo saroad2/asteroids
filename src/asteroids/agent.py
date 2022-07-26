@@ -1,12 +1,12 @@
 import numpy as np
 import tensorflow as tf
-from keras import Model, layers
 from keras.losses import Huber
 from keras.optimizers import Adam
 
 from asteroids.action import Action
 from asteroids.buffer import Buffer
 from asteroids.env import AsteroidsEnv
+from asteroids.models import get_critic
 
 
 class AsteroidsAgent:
@@ -30,8 +30,8 @@ class AsteroidsAgent:
             state_shape=self.env.state_shape,
             batch_size=batch_size,
         )
-        self.critic = self.get_critic()
-        self.target_critic = self.get_critic()
+        self.critic = get_critic(env=self.env)
+        self.target_critic = get_critic(env=self.env)
         self.target_critic.set_weights(self.critic.get_weights())
         self.optimizer = Adam(learning_rate=learning_rate)
         self.loss_func = Huber(reduction=tf.keras.losses.Reduction.SUM)
@@ -99,26 +99,3 @@ class AsteroidsAgent:
         self.optimizer.apply_gradients(zip(grads, self.critic.trainable_variables))
 
         return loss
-
-    def update_target(self, tau):
-        for a_target, a in zip(self.target_critic.weights, self.critic.weights):
-            a_target.assign(tau * a_target + (1 - tau) * a)
-
-    def get_critic(self) -> Model:
-        state_input = layers.Input(shape=self.env.state_shape)
-        state_out = layers.Conv2D(16, (3, 3), activation="relu")(state_input)
-        state_out = layers.MaxPool2D()(state_out)
-        state_out = layers.Conv2D(32, (2, 2), activation="relu")(state_out)
-        state_out = layers.MaxPool2D()(state_out)
-        state_out = layers.Flatten()(state_out)
-        state_out = layers.Dense(64, activation="relu")(state_out)
-
-        action_input = layers.Input(shape=(len(Action),))
-        action_out = layers.Dense(32, activation="relu")(action_input)
-        action_out = layers.Dense(64, activation="relu")(action_out)
-
-        concat = layers.Concatenate()([state_out, action_out])
-        out = layers.Dense(128, activation="relu")(concat)
-        out = layers.Dense(1, activation="relu")(out)
-
-        return Model(inputs=[state_input, action_input], outputs=out)

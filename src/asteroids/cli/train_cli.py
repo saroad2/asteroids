@@ -13,6 +13,7 @@ from asteroids.cli.common_flags import (
     width_option,
 )
 from asteroids.env import AsteroidsEnv
+from asteroids.models import update_target
 from asteroids.plotting import plot_moving_average
 
 
@@ -76,7 +77,7 @@ def train_cli(
             agent.run_episode()
             losses.append(agent.learn())
             moves.append(env.moves)
-            agent.update_target(tau)
+            update_target(target=agent.target_critic, model=agent.critic, tau=tau)
             agent.explore_factor *= explore_decay
             if agent.explore_factor < 1e-5:
                 agent.explore_factor = 0
