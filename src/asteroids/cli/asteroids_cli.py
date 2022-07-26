@@ -1,6 +1,6 @@
 import click
 
 
-@click.command("asteroids")
+@click.group("asteroids")
 def main_cli():
-    click.echo("I'm here!")
+    """Let's play Asteroids!"""
