@@ -53,10 +53,15 @@ class AsteroidsEnv(gym.Env):
         self.asteroids = []
         self.moves = 0
         self.score = 0
+        return self.state
+
+    @property
+    def state_shape(self):
+        return self.width, self.height, 2
 
     @property
     def state(self):
-        state = np.zeros(shape=(self.width, self.height, 2))
+        state = np.zeros(shape=self.state_shape)
         state[self.player_position, 0, 0] = 1
         for asteroid in self.asteroids:
             x, y = asteroid

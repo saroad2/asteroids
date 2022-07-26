@@ -1,22 +1,21 @@
-import click
 import pygame
 
 from asteroids.action import Action
 from asteroids.cli.asteroids_cli import main_cli
-from asteroids.constants import (
-    DEFAULT_ASTEROIDS_CHANCE_GROWTH,
-    DEFAULT_ASTEROIDS_START_CHANCE,
-    DEFAULT_HEIGHT,
-    DEFAULT_WIDTH,
+from asteroids.cli.common_flags import (
+    chance_option,
+    growth_option,
+    height_option,
+    width_option,
 )
 from asteroids.env import AsteroidsEnv
 
 
 @main_cli.command("play")
-@click.option("-w", "--width", type=int, default=DEFAULT_WIDTH)
-@click.option("-h", "--height", type=int, default=DEFAULT_HEIGHT)
-@click.option("-c", "--chance", type=float, default=DEFAULT_ASTEROIDS_START_CHANCE)
-@click.option("-g", "--growth", type=float, default=DEFAULT_ASTEROIDS_CHANCE_GROWTH)
+@width_option
+@height_option
+@chance_option
+@growth_option
 def play_cli(width, height, chance, growth):
     pygame.init()
 
