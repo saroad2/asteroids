@@ -28,6 +28,7 @@ from asteroids.plotting import plot_moving_average
 @click.option("-g", "--gamma", type=float, default=0.99)
 @click.option("-t", "--tau", type=float, default=0.99)
 @click.option("--explore-factor", type=float, default=1)
+@click.option("--explore-decay", type=float, default=0.9999)
 @click.option("-l", "--learning-rate", type=float, default=0.001)
 @click.option("--max-episode-moves", type=int, default=100)
 @click.option("-m", "--moves-stop", type=int, default=80)
@@ -43,6 +44,7 @@ def train_cli(
     gamma: float,
     tau: float,
     explore_factor: float,
+    explore_decay: float,
     learning_rate: float,
     max_episode_moves: int,
     moves_stop,
@@ -70,6 +72,10 @@ def train_cli(
             losses.append(agent.learn())
             moves.append(env.moves)
             agent.update_target(tau)
+            agent.explore_factor *= explore_decay
+            if agent.explore_factor < 1e-5:
+                agent.explore_factor = 0
+
             loss_mean = np.mean(losses[-window_size:])
             moves_mean = np.mean(moves[-window_size:])
             bar.set_description(
