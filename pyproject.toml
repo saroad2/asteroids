@@ -1,0 +1,24 @@
+[tool.poetry]
+name = "asteroids"
+version = "0.1.0"
+description = ""
+authors = ["Sagi Shadur <sagi@proxima.co.il>"]
+
+[tool.poetry.dependencies]
+python = ">=3.10,<3.11"
+gym = "^0.25.0"
+tensorflow = "^2.9.1"
+matplotlib = "^3.5.2"
+tqdm = "^4.64.0"
+scipy = "^1.8.1"
+pygame = "^2.1.2"
+
+[tool.poetry.dev-dependencies]
+black = "^22.6.0"
+
+[tool.poetry.scripts]
+asteroids = "asteroids.__main__:main_cli"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
