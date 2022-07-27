@@ -13,8 +13,9 @@ from asteroids.cli.common_flags import (
     width_option,
 )
 from asteroids.env import AsteroidsEnv
+from asteroids.history import HistoryPoint
 from asteroids.models import update_target
-from asteroids.plotting import plot_moving_average
+from asteroids.plotting import plot_all
 
 
 @main_cli.command("train")
@@ -59,8 +60,7 @@ def train_cli(
         asteroids_chance_growth=growth,
     )
     agent = AsteroidsAgent(env=env, batch_size=batch_size, learning_rate=learning_rate)
-    losses = []
-    moves = []
+    history = []
     plots_dir = Path.cwd() / "plots"
     plots_dir.mkdir(exist_ok=True)
     model_path = Path.cwd() / "critic_model.hdf5"
@@ -72,33 +72,33 @@ def train_cli(
                 explore_factor=explore_factor,
                 epsilon=epsilon,
             )
-            losses.append(agent.learn(gamma))
-            moves.append(env.moves)
+            loss = agent.learn(gamma)
+            history.append(HistoryPoint.from_env(env=env, loss=loss))
             update_target(target=agent.target_critic, model=agent.critic, tau=tau)
             explore_factor *= explore_decay
             if explore_factor < 1e-5:
                 explore_factor = 0
 
-            loss_mean = np.mean(losses[-window_size:])
-            moves_mean = np.mean(moves[-window_size:])
+            latest_history = history[-window_size:]
+            means_dict = {
+                field: np.mean(
+                    [getattr(history_point, field) for history_point in latest_history]
+                )
+                for field in HistoryPoint.fields()
+            }
+            moves_mean = means_dict["moves"]
             bar.set_description(
-                f"Loss mean: {loss_mean:.2f}, "
-                f"Moves mean: {moves_mean:.2f}, "
+                f"Loss mean: {means_dict['loss']:.2f}, "
+                f"Moves mean: {moves_mean :.2f}, "
                 f"Explore factor: {explore_factor:.2f}"
             )
-            if len(moves) > window_size and moves_mean >= moves_stop:
+            if len(history) > window_size and moves_mean >= moves_stop:
                 break
             if (ep + 1) % checkpoint == 0:
-                plot_moving_average(
-                    losses, window=window_size, name="loss", output_dir=plots_dir
-                )
-                plot_moving_average(
-                    moves, window=window_size, name="moves", output_dir=plots_dir
-                )
+                plot_all(history=history, window=window_size, output_dir=plots_dir)
                 agent.target_critic.save_weights(model_path)
                 click.echo(f"Saved model checkpoint in {model_path}")
 
-    plot_moving_average(losses, window=window_size, name="loss", output_dir=plots_dir)
-    plot_moving_average(moves, window=window_size, name="moves", output_dir=plots_dir)
+    plot_all(history=history, window=window_size, output_dir=plots_dir)
     agent.target_critic.save_weights(model_path)
     click.echo(f"Final model was saved in {model_path}")
