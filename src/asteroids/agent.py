@@ -1,3 +1,5 @@
+from pathlib import Path
+
 import numpy as np
 import tensorflow as tf
 from keras.losses import Huber
@@ -102,3 +104,23 @@ class AsteroidsAgent:
         self.optimizer.apply_gradients(zip(grads, self.critic.trainable_variables))
 
         return loss
+
+    def save_models(self, models_directory: Path):
+        models_directory.mkdir(exist_ok=True)
+        self.critic.save_weights(models_directory / self.model_file_name("critic"))
+        self.target_critic.save_weights(
+            models_directory / self.model_file_name("target_critic")
+        )
+
+    def load_models(self, models_directory: Path):
+        self.critic.load_weights(models_directory / self.model_file_name("critic"))
+        self.target_critic.load_weights(
+            models_directory / self.model_file_name("target_critic")
+        )
+
+    def model_file_name(self, prefix):
+        return (
+            f"{prefix}_"
+            f"{self.env.edge_policy.name.lower()}_"
+            f"{self.env.width}_{self.env.height}.hdf5"
+        )

@@ -71,8 +71,7 @@ def train_cli(
     agent = AsteroidsAgent(env=env, batch_size=batch_size, learning_rate=learning_rate)
     history = []
     plots_dir = Path.cwd() / "plots"
-    plots_dir.mkdir(exist_ok=True)
-    model_path = Path.cwd() / "critic_model.hdf5"
+    models_directory = Path.cwd() / "models"
     click.echo(agent.critic.summary())
     with tqdm.trange(episodes) as bar:
         for ep in bar:
@@ -106,9 +105,9 @@ def train_cli(
                 break
             if (ep + 1) % checkpoint == 0:
                 plot_all(history=history, window=window_size, output_dir=plots_dir)
-                agent.target_critic.save_weights(model_path)
-                click.echo(f"Saved model checkpoint in {model_path}")
+                agent.save_models(models_directory)
+                click.echo(f"Saved models checkpoint in {models_directory}")
 
     plot_all(history=history, window=window_size, output_dir=plots_dir)
-    agent.target_critic.save_weights(model_path)
-    click.echo(f"Final model was saved in {model_path}")
+    agent.save_models(models_directory)
+    click.echo(f"Final models are saved in {models_directory}")

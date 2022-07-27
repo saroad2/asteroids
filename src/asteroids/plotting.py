@@ -8,6 +8,7 @@ from asteroids.history import HistoryPoint
 
 
 def plot_all(history: List[HistoryPoint], window: int, output_dir: Path):
+    output_dir.mkdir(exist_ok=True)
     for field in HistoryPoint.fields():
         values = [getattr(history_point, field) for history_point in history]
         plot_moving_average(
