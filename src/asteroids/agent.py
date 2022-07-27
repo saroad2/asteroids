@@ -15,10 +15,8 @@ class AsteroidsAgent:
         env: AsteroidsEnv,
         batch_size: int,
         learning_rate: float,
-        max_episode_moves: int,
     ):
         self.env = env
-        self.max_episode_moves = max_episode_moves
 
         self.buffer = Buffer(
             state_shape=self.env.state_shape,
@@ -40,13 +38,15 @@ class AsteroidsAgent:
         self.counts = np.ones(shape=len(Action))
         return self.env.reset()
 
-    def run_episode(self, explore_factor: float, epsilon: float):
+    def run_episode(
+        self, max_episode_moves: int, explore_factor: float, epsilon: float
+    ):
         state = self.reset()
         states = []
         actions = []
         rewards = []
         next_states = []
-        for i in range(self.max_episode_moves):
+        for i in range(max_episode_moves):
             action = self.get_action(
                 state, explore_factor=explore_factor, epsilon=epsilon
             )

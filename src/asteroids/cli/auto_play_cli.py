@@ -28,12 +28,7 @@ def auto_play_cli(width, height, chance, growth):
         asteroids_chance_growth=growth,
         init_pygame=True,
     )
-    agent = AsteroidsAgent(
-        env=env,
-        batch_size=0,
-        learning_rate=0,
-        max_episode_moves=0,
-    )
+    agent = AsteroidsAgent(env=env, batch_size=0, learning_rate=0)
     agent.target_critic.load_weights(Path.cwd() / "critic_model.hdf5")
     running = True
     clock = pygame.time.Clock()

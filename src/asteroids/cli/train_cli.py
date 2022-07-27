@@ -58,12 +58,7 @@ def train_cli(
         start_asteroids_chance=chance,
         asteroids_chance_growth=growth,
     )
-    agent = AsteroidsAgent(
-        env=env,
-        batch_size=batch_size,
-        learning_rate=learning_rate,
-        max_episode_moves=max_episode_moves,
-    )
+    agent = AsteroidsAgent(env=env, batch_size=batch_size, learning_rate=learning_rate)
     losses = []
     moves = []
     plots_dir = Path.cwd() / "plots"
@@ -72,7 +67,11 @@ def train_cli(
     click.echo(agent.critic.summary())
     with tqdm.trange(episodes) as bar:
         for ep in bar:
-            agent.run_episode(explore_factor=explore_factor, epsilon=epsilon)
+            agent.run_episode(
+                max_episode_moves=max_episode_moves,
+                explore_factor=explore_factor,
+                epsilon=epsilon,
+            )
             losses.append(agent.learn(gamma))
             moves.append(env.moves)
             update_target(target=agent.target_critic, model=agent.critic, tau=tau)
