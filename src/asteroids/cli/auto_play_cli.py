@@ -9,6 +9,7 @@ from asteroids.cli.common_flags import (
     edge_policy_option,
     growth_option,
     height_option,
+    model_suffix_option,
     star_option,
     width_option,
 )
@@ -22,7 +23,8 @@ from asteroids.env import AsteroidsEnv
 @growth_option
 @star_option
 @edge_policy_option
-def auto_play_cli(width, height, chance, growth, star, edge_policy):
+@model_suffix_option
+def auto_play_cli(width, height, chance, growth, star, edge_policy, model_suffix):
     pygame.init()
 
     env = AsteroidsEnv(
@@ -35,7 +37,7 @@ def auto_play_cli(width, height, chance, growth, star, edge_policy):
         init_pygame=True,
     )
     agent = AsteroidsAgent(env=env, batch_size=0, learning_rate=0)
-    agent.load_models(Path.cwd() / "models")
+    agent.load_models(Path.cwd() / "models", suffix=model_suffix)
     running = True
     clock = pygame.time.Clock()
     while running:

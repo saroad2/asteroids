@@ -24,3 +24,4 @@ edge_policy_option = click.option(
     default=EdgePolicy.WALL.name,
     callback=lambda ctx, param, value: EdgePolicy[value],
 )
+model_suffix_option = click.option("--model-suffix", type=str)
