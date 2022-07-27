@@ -79,6 +79,7 @@ class AsteroidsAgent:
         counts_sum_log = np.log(self.counts_sum)
         explore_value = explore_factor * counts_sum_log / self.counts
         action_index = np.argmax(critic_value + explore_value)
+        self.counts[action_index] += 1
         return Action(action_index)
 
     def learn(self, gamma: float):
