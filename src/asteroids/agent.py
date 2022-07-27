@@ -126,7 +126,7 @@ class AsteroidsAgent:
     def model_file_name(self, prefix: str, suffix: Optional[str] = None):
         name = (
             f"{prefix}_"
-            f"{self.env.edge_policy.name.lower()}"
+            f"{self.env.edge_policy.name.lower()}_"
             f"{self.env.width}_{self.env.height}"
         )
         if suffix is not None:
