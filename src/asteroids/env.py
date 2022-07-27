@@ -29,7 +29,7 @@ class AsteroidsEnv(gym.Env):
         self.asteroids_chance_growth = asteroids_chance_growth
         self.player_position = self.width // 2
         self.asteroids: List[np.ndarray] = []
-        self.moves: int = 0
+        self.actions_count: np.ndarray = np.zeros(shape=(len(Action)))
         self.score: float = 0
         if init_pygame:
             screen_width, screen_height = (
@@ -51,7 +51,7 @@ class AsteroidsEnv(gym.Env):
     ):
         self.player_position = self.width // 2
         self.asteroids = []
-        self.moves = 0
+        self.actions_count = np.zeros(shape=(len(Action)))
         self.score = 0
         return self.state
 
@@ -75,15 +75,33 @@ class AsteroidsEnv(gym.Env):
                 return True
         return False
 
+    @property
+    def moves(self):
+        return np.sum(self.actions_count)
+
+    @property
+    def entropy(self):
+        moves = self.moves
+        if moves == 0:
+            return 0
+        entropy = 0
+        for i in range(len(Action)):
+            p = self.actions_count[i]
+            if p == 0:
+                continue
+            p /= moves
+            entropy -= p * np.log(p)
+        return entropy
+
     def step(self, action: Action):
         self.player_position = action.update_position(
             position=self.player_position, width=self.width
         )
         self.update_enemies()
-        self.moves += 1
         lost = self.lost
         reward = -self.lost_penalty if lost else self.live_reward
         self.score += reward
+        self.actions_count[action.value] += 1
         return self.state, reward, lost, {}
 
     def update_enemies(self):

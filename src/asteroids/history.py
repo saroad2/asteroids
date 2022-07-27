@@ -7,6 +7,7 @@ from asteroids.env import AsteroidsEnv
 class HistoryPoint:
     moves: int
     score: float
+    entropy: float
     loss: float
 
     @classmethod
@@ -15,4 +16,6 @@ class HistoryPoint:
 
     @classmethod
     def from_env(cls, env: AsteroidsEnv, loss: float):
-        return HistoryPoint(moves=env.moves, score=env.score, loss=loss)
+        return HistoryPoint(
+            moves=env.moves, score=env.score, entropy=env.entropy, loss=loss
+        )
