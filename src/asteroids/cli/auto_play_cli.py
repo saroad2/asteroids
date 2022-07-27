@@ -31,7 +31,6 @@ def auto_play_cli(width, height, chance, growth):
     agent = AsteroidsAgent(
         env=env,
         batch_size=0,
-        gamma=0,
         learning_rate=0,
         max_episode_moves=0,
     )

@@ -61,7 +61,6 @@ def train_cli(
     agent = AsteroidsAgent(
         env=env,
         batch_size=batch_size,
-        gamma=gamma,
         learning_rate=learning_rate,
         max_episode_moves=max_episode_moves,
     )
@@ -74,7 +73,7 @@ def train_cli(
     with tqdm.trange(episodes) as bar:
         for ep in bar:
             agent.run_episode(explore_factor=explore_factor, epsilon=epsilon)
-            losses.append(agent.learn())
+            losses.append(agent.learn(gamma))
             moves.append(env.moves)
             update_target(target=agent.target_critic, model=agent.critic, tau=tau)
             explore_factor *= explore_decay

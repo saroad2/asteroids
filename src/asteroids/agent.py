@@ -14,12 +14,10 @@ class AsteroidsAgent:
         self,
         env: AsteroidsEnv,
         batch_size: int,
-        gamma: float,
         learning_rate: float,
         max_episode_moves: int,
     ):
         self.env = env
-        self.gamma = gamma
         self.max_episode_moves = max_episode_moves
 
         self.buffer = Buffer(
@@ -83,7 +81,7 @@ class AsteroidsAgent:
         action_index = np.argmax(critic_value + explore_value)
         return Action(action_index)
 
-    def learn(self):
+    def learn(self, gamma: float):
         state, action, rewards, next_states = self.buffer.batch()
         next_actions = np.array(
             [
@@ -96,7 +94,7 @@ class AsteroidsAgent:
         with tf.GradientTape() as tape:
             actual_values = self.critic([state, action])
             next_values = self.target_critic([next_states, next_actions])
-            expected_values = rewards + self.gamma * next_values
+            expected_values = rewards + gamma * next_values
             loss = self.loss_func(actual_values, expected_values)
 
         grads = tape.gradient(loss, self.critic.trainable_variables)
