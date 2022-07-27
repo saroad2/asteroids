@@ -38,7 +38,7 @@ from asteroids.plotting import plot_all
 @click.option("--explore-decay", type=float, default=0.9999)
 @click.option("-l", "--learning-rate", type=float, default=0.001)
 @click.option("--max-episode-moves", type=int, default=100)
-@click.option("-m", "--moves-stop", type=int, default=80)
+@click.option("--score-stop", type=float, default=12)
 @click.option("--checkpoint", type=int, default=1_000)
 def train_cli(
     width: int,
@@ -57,7 +57,7 @@ def train_cli(
     explore_decay: float,
     learning_rate: float,
     max_episode_moves: int,
-    moves_stop: int,
+    score_stop: float,
     checkpoint: int,
 ):
     env = AsteroidsEnv(
@@ -73,6 +73,7 @@ def train_cli(
     plots_dir = Path.cwd() / "plots"
     models_directory = Path.cwd() / "models"
     click.echo(agent.critic.summary())
+    max_score = 0
     with tqdm.trange(episodes) as bar:
         for ep in bar:
             agent.run_episode(
@@ -94,20 +95,22 @@ def train_cli(
                 )
                 for field in HistoryPoint.fields()
             }
-            moves_mean = means_dict["moves"]
+            scores_mean = means_dict["score"]
             bar.set_description(
                 f"Loss mean: {means_dict['loss']:.2f}, "
-                f"Moves mean: {moves_mean :.2f}, "
-                f"Score mean: {means_dict['score'] :.2f}, "
+                f"Moves mean: {means_dict['moves'] :.2f}, "
+                f"Score mean: {scores_mean :.2f}, "
                 f"Explore factor: {explore_factor:.2f}"
             )
-            if len(history) > window_size and moves_mean >= moves_stop:
-                break
+            if len(history) > window_size:
+                if scores_mean > max_score:
+                    agent.save_models(models_directory, suffix="best")
+                    max_score = scores_mean
+                if scores_mean >= score_stop:
+                    break
             if (ep + 1) % checkpoint == 0:
-                plot_all(history=history, window=window_size, output_dir=plots_dir)
                 agent.save_models(models_directory)
-                click.echo(f"Saved models checkpoint in {models_directory}")
+                plot_all(history=history, window=window_size, output_dir=plots_dir)
 
-    plot_all(history=history, window=window_size, output_dir=plots_dir)
     agent.save_models(models_directory)
-    click.echo(f"Final models are saved in {models_directory}")
+    plot_all(history=history, window=window_size, output_dir=plots_dir)

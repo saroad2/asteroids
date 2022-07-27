@@ -1,4 +1,5 @@
 from pathlib import Path
+from typing import Optional
 
 import numpy as np
 import tensorflow as tf
@@ -105,22 +106,29 @@ class AsteroidsAgent:
 
         return loss
 
-    def save_models(self, models_directory: Path):
+    def save_models(self, models_directory: Path, suffix: Optional[str] = None):
         models_directory.mkdir(exist_ok=True)
-        self.critic.save_weights(models_directory / self.model_file_name("critic"))
+        self.critic.save_weights(
+            models_directory / self.model_file_name("critic", suffix=suffix)
+        )
         self.target_critic.save_weights(
-            models_directory / self.model_file_name("target_critic")
+            models_directory / self.model_file_name("target_critic", suffix=suffix)
         )
 
-    def load_models(self, models_directory: Path):
-        self.critic.load_weights(models_directory / self.model_file_name("critic"))
+    def load_models(self, models_directory: Path, suffix: Optional[str] = None):
+        self.critic.load_weights(
+            models_directory / self.model_file_name("critic", suffix=suffix)
+        )
         self.target_critic.load_weights(
-            models_directory / self.model_file_name("target_critic")
+            models_directory / self.model_file_name("target_critic", suffix=suffix)
         )
 
-    def model_file_name(self, prefix):
-        return (
+    def model_file_name(self, prefix: str, suffix: Optional[str] = None):
+        name = (
             f"{prefix}_"
-            f"{self.env.edge_policy.name.lower()}_"
-            f"{self.env.width}_{self.env.height}.hdf5"
+            f"{self.env.edge_policy.name.lower()}"
+            f"{self.env.width}_{self.env.height}"
         )
+        if suffix is not None:
+            name += "_" + suffix
+        return f"{name}.hdf5"
