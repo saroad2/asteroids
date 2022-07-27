@@ -119,7 +119,7 @@ def train_cli(
                     break
             if (ep + 1) % checkpoint == 0:
                 agent.save_models(models_directory)
-                plot_all(history=history, window=window_size, output_dir=plots_dir)
+                plot_all(history=history, output_dir=plots_dir)
 
     agent.save_models(models_directory)
-    plot_all(history=history, window=window_size, output_dir=plots_dir)
+    plot_all(history=history, output_dir=plots_dir)
