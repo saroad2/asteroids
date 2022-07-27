@@ -105,15 +105,16 @@ def train_cli(
             }
             scores_mean = means_dict["score"]
             bar.set_description(
-                f"Loss mean: {means_dict['loss']:.2f}, "
-                f"Moves mean: {means_dict['moves'] :.2f}, "
-                f"Score mean: {scores_mean :.2f}, "
-                f"Explore factor: {explore_factor:.2f}"
+                f"Loss: {means_dict['loss']:.2f}, "
+                f"Moves: {means_dict['moves'] :.2f}, "
+                f"Score: {scores_mean :.2f}, "
+                f"Explore: {explore_factor:.2f}"
             )
             if len(history) > window_size:
                 if scores_mean > max_score:
                     agent.save_models(models_directory, suffix="best")
                     max_score = scores_mean
+                    bar.set_postfix_str(f"Best: {max_score:.2f}")
                 if scores_mean >= score_stop:
                     break
             if (ep + 1) % checkpoint == 0:
