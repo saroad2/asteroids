@@ -8,10 +8,12 @@ from asteroids.agent import AsteroidsAgent
 from asteroids.cli.asteroids_cli import main_cli
 from asteroids.cli.common_flags import (
     chance_option,
+    edge_policy_option,
     growth_option,
     height_option,
     width_option,
 )
+from asteroids.edge_policy import EdgePolicy
 from asteroids.env import AsteroidsEnv
 from asteroids.history import HistoryPoint
 from asteroids.models import update_target
@@ -23,6 +25,7 @@ from asteroids.plotting import plot_all
 @height_option
 @chance_option
 @growth_option
+@edge_policy_option
 @click.option("-e", "--episodes", type=int, default=10_000)
 @click.option("-b", "--batch-size", type=int, default=64)
 @click.option("-w", "--window-size", type=int, default=50)
@@ -38,6 +41,7 @@ from asteroids.plotting import plot_all
 def train_cli(
     width: int,
     height: int,
+    edge_policy: EdgePolicy,
     chance: float,
     growth: float,
     episodes: int,
@@ -56,6 +60,7 @@ def train_cli(
     env = AsteroidsEnv(
         width=width,
         height=height,
+        edge_policy=edge_policy,
         start_asteroids_chance=chance,
         asteroids_chance_growth=growth,
     )

@@ -2,6 +2,8 @@ from enum import IntEnum
 
 import numpy as np
 
+from asteroids.edge_policy import EdgePolicy
+
 
 class Action(IntEnum):
     LEFT = 0
@@ -16,10 +18,7 @@ class Action(IntEnum):
     def to_step(self):
         return self.value - 1
 
-    def update_position(self, position, width):
-        new_position = position + self.to_step()
-        if new_position < 0:
-            return 0
-        if new_position >= width:
-            return width - 1
-        return new_position
+    def update_position(self, position: int, width: int, edge_policy: EdgePolicy):
+        return edge_policy.convert_position(
+            position=position + self.to_step(), width=width
+        )

@@ -6,6 +6,7 @@ from asteroids.agent import AsteroidsAgent
 from asteroids.cli.asteroids_cli import main_cli
 from asteroids.cli.common_flags import (
     chance_option,
+    edge_policy_option,
     growth_option,
     height_option,
     width_option,
@@ -18,12 +19,14 @@ from asteroids.env import AsteroidsEnv
 @height_option
 @chance_option
 @growth_option
-def auto_play_cli(width, height, chance, growth):
+@edge_policy_option
+def auto_play_cli(width, height, chance, growth, edge_policy):
     pygame.init()
 
     env = AsteroidsEnv(
         width=width,
         height=height,
+        edge_policy=edge_policy,
         start_asteroids_chance=chance,
         asteroids_chance_growth=growth,
         init_pygame=True,

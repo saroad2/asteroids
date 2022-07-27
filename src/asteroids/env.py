@@ -7,6 +7,7 @@ from scipy.stats import poisson
 
 from asteroids.action import Action
 from asteroids.constants import BLACK, BLOCK_SIZE, BLUE, RED, WHITE
+from asteroids.edge_policy import EdgePolicy
 
 
 class AsteroidsEnv(gym.Env):
@@ -18,6 +19,7 @@ class AsteroidsEnv(gym.Env):
         self,
         width: int,
         height: int,
+        edge_policy: EdgePolicy,
         start_asteroids_chance: float,
         asteroids_chance_growth: float,
         init_pygame: bool = False,
@@ -25,6 +27,7 @@ class AsteroidsEnv(gym.Env):
         super().__init__()
         self.width = width
         self.height = height
+        self.edge_policy = edge_policy
         self.start_asteroids_chance = start_asteroids_chance
         self.asteroids_chance_growth = asteroids_chance_growth
         self.player_position = self.width // 2
@@ -60,9 +63,14 @@ class AsteroidsEnv(gym.Env):
         return self.width, self.height, 2
 
     @property
+    def player_in_board(self):
+        return 0 <= self.player_position < self.width
+
+    @property
     def state(self):
         state = np.zeros(shape=self.state_shape)
-        state[self.player_position, 0, 0] = 1
+        if self.player_in_board:
+            state[self.player_position, 0, 0] = 1
         for asteroid in self.asteroids:
             x, y = asteroid
             state[x, y, 1] = 1
@@ -70,6 +78,8 @@ class AsteroidsEnv(gym.Env):
 
     @property
     def lost(self):
+        if not self.player_in_board:
+            return True
         for asteroid in self.asteroids:
             if asteroid[1] == 0 and asteroid[0] == self.player_position:
                 return True
@@ -95,7 +105,9 @@ class AsteroidsEnv(gym.Env):
 
     def step(self, action: Action):
         self.player_position = action.update_position(
-            position=self.player_position, width=self.width
+            position=self.player_position,
+            width=self.width,
+            edge_policy=self.edge_policy,
         )
         self.update_enemies()
         lost = self.lost
