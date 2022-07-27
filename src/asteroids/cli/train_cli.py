@@ -11,6 +11,7 @@ from asteroids.cli.common_flags import (
     edge_policy_option,
     growth_option,
     height_option,
+    star_option,
     width_option,
 )
 from asteroids.edge_policy import EdgePolicy
@@ -25,6 +26,7 @@ from asteroids.plotting import plot_all
 @height_option
 @chance_option
 @growth_option
+@star_option
 @edge_policy_option
 @click.option("-e", "--episodes", type=int, default=10_000)
 @click.option("-b", "--batch-size", type=int, default=64)
@@ -44,6 +46,7 @@ def train_cli(
     edge_policy: EdgePolicy,
     chance: float,
     growth: float,
+    star: float,
     episodes: int,
     batch_size: int,
     window_size: int,
@@ -63,6 +66,7 @@ def train_cli(
         edge_policy=edge_policy,
         start_asteroids_chance=chance,
         asteroids_chance_growth=growth,
+        star_chance=star,
     )
     agent = AsteroidsAgent(env=env, batch_size=batch_size, learning_rate=learning_rate)
     history = []
@@ -95,6 +99,7 @@ def train_cli(
             bar.set_description(
                 f"Loss mean: {means_dict['loss']:.2f}, "
                 f"Moves mean: {moves_mean :.2f}, "
+                f"Score mean: {means_dict['score'] :.2f}, "
                 f"Explore factor: {explore_factor:.2f}"
             )
             if len(history) > window_size and moves_mean >= moves_stop:

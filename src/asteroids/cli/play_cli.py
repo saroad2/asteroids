@@ -7,6 +7,7 @@ from asteroids.cli.common_flags import (
     edge_policy_option,
     growth_option,
     height_option,
+    star_option,
     width_option,
 )
 from asteroids.env import AsteroidsEnv
@@ -18,7 +19,8 @@ from asteroids.env import AsteroidsEnv
 @chance_option
 @growth_option
 @edge_policy_option
-def play_cli(width, height, chance, growth, edge_policy):
+@star_option
+def play_cli(width, height, chance, growth, star, edge_policy):
     pygame.init()
 
     env = AsteroidsEnv(
@@ -27,6 +29,7 @@ def play_cli(width, height, chance, growth, edge_policy):
         edge_policy=edge_policy,
         start_asteroids_chance=chance,
         asteroids_chance_growth=growth,
+        star_chance=star,
         init_pygame=True,
     )
     running = True
