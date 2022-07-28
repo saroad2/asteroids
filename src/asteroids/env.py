@@ -7,7 +7,7 @@ import pygame
 from scipy.stats import poisson
 
 from asteroids.action import Action
-from asteroids.constants import BLACK, BLOCK_SIZE, BLUE, RED, WHITE, YELLOW
+from asteroids.constants import BLACK, BLOCK_SIZE, BLUE, GREEN, RED, WHITE, YELLOW
 from asteroids.edge_policy import EdgePolicy
 
 
@@ -188,12 +188,15 @@ class AsteroidsEnv(gym.Env):
         self.screen.blit(img, rect)
 
     def render_chances(self, left, middle, right):
-        img_left = self.font.render(f"{left:.3f}", False, BLACK)
+        max_index = np.argmax([left, middle, right])
+        left_color = GREEN if max_index == 0 else BLACK
+        img_left = self.font.render(f"{left:.3f}", False, left_color)
         rect_left = img_left.get_rect()
         rect_left.midleft = (0, BLOCK_SIZE * self.height // 2)
         self.screen.blit(img_left, rect_left)
 
-        img_center = self.font.render(f"{middle:.3f}", False, BLACK)
+        center_color = GREEN if max_index == 1 else BLACK
+        img_center = self.font.render(f"{middle:.3f}", False, center_color)
         rect_center = img_center.get_rect()
         rect_center.center = (
             BLOCK_SIZE * self.width // 2,
@@ -201,7 +204,8 @@ class AsteroidsEnv(gym.Env):
         )
         self.screen.blit(img_center, rect_center)
 
-        img_right = self.font.render(f"{right:.3f}", False, BLACK)
+        right_color = GREEN if max_index == 2 else BLACK
+        img_right = self.font.render(f"{right:.3f}", False, right_color)
         rect_right = img_right.get_rect()
         rect_right.midright = (BLOCK_SIZE * self.width, BLOCK_SIZE * self.height // 2)
         self.screen.blit(img_right, rect_right)
