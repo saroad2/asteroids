@@ -16,6 +16,7 @@ from asteroids.cli.common_flags import (
     star_option,
     width_option,
 )
+from asteroids.constants import MIN_EXPLORE_FACTOR
 from asteroids.edge_policy import EdgePolicy
 from asteroids.env import AsteroidsEnv
 from asteroids.history import HistoryPoint
@@ -82,6 +83,7 @@ def train_cli(
         agent.load_models(models_directory=models_directory, suffix=model_suffix)
     click.echo(agent.critic.summary())
     max_score = 0
+    start_explore_factor = explore_factor
     with tqdm.trange(episodes) as bar:
         for ep in bar:
             agent.run_episode(
@@ -90,11 +92,10 @@ def train_cli(
                 epsilon=epsilon,
             )
             loss = agent.learn(gamma)
-            history.append(HistoryPoint.from_env(env=env, loss=loss))
+            history.append(
+                HistoryPoint.from_env(env=env, loss=loss, explore_factor=explore_factor)
+            )
             update_target(target=agent.target_critic, model=agent.critic, tau=tau)
-            explore_factor *= explore_decay
-            if explore_factor < 1e-5:
-                explore_factor = 0
 
             latest_history = history[-window_size:]
             means_dict = {
@@ -110,6 +111,10 @@ def train_cli(
                 f"Score: {scores_mean :.2f}, "
                 f"Explore: {explore_factor:.2f}"
             )
+            if scores_mean > 0.6 * max_score:
+                explore_factor = max(explore_factor * explore_decay, MIN_EXPLORE_FACTOR)
+            elif explore_factor < start_explore_factor:
+                explore_factor /= explore_decay
             if len(history) > window_size:
                 if scores_mean > max_score:
                     agent.save_models(models_directory, suffix="best")
