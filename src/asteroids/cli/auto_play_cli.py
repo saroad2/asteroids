@@ -1,5 +1,6 @@
 from pathlib import Path
 
+import click
 import pygame
 
 from asteroids.agent import AsteroidsAgent
@@ -24,7 +25,10 @@ from asteroids.env import AsteroidsEnv
 @star_option
 @edge_policy_option
 @model_suffix_option
-def auto_play_cli(width, height, chance, growth, star, edge_policy, model_suffix):
+@click.option("--explore-factor", type=float, default=0)
+def auto_play_cli(
+    width, height, chance, growth, star, edge_policy, model_suffix, explore_factor
+):
     pygame.init()
 
     env = AsteroidsEnv(
@@ -54,7 +58,7 @@ def auto_play_cli(width, height, chance, growth, star, edge_policy, model_suffix
         env.render_chances(*critic_values)
         if not env.lost:
             action = agent.get_action(
-                state=state, explore_factor=0, epsilon=0, use_target=True
+                state=state, explore_factor=explore_factor, epsilon=0, use_target=True
             )
             env.step(action)
 
