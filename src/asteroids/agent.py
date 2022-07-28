@@ -45,29 +45,21 @@ class AsteroidsAgent:
         self, max_episode_moves: int, explore_factor: float, epsilon: float
     ):
         state = self.reset()
-        states = []
-        actions = []
-        rewards = []
-        next_states = []
         for i in range(max_episode_moves):
             action = self.get_action(
                 state, explore_factor=explore_factor, epsilon=epsilon
             )
             next_state, reward, done, _ = self.env.step(action)
-            states.append(state)
-            actions.append(action.to_vector())
-            rewards.append(reward)
-            next_states.append(next_state)
+            self.buffer.record(
+                state=state,
+                action=action.to_vector(),
+                reward=reward,
+                next_state=next_state,
+                done=done,
+            )
             if done:
                 break
             state = next_state
-
-        for state, action, reward, next_state in zip(
-            states, actions, rewards, next_states
-        ):
-            self.buffer.record(
-                state=state, action=action, reward=reward, next_state=next_state
-            )
 
     def get_action(self, state, explore_factor, epsilon, use_target: bool = False):
         if np.random.uniform() < epsilon:
@@ -89,7 +81,7 @@ class AsteroidsAgent:
         return np.squeeze(critic_value)
 
     def learn(self, gamma: float):
-        state, action, rewards, next_states = self.buffer.batch()
+        state, action, rewards, next_states, done = self.buffer.batch()
         next_actions = np.array(
             [
                 self.get_action(
@@ -98,10 +90,10 @@ class AsteroidsAgent:
                 for state in next_states
             ]
         )
+        next_values = tf.squeeze(self.target_critic([next_states, next_actions]))
+        expected_values = rewards + gamma * done * next_values
         with tf.GradientTape() as tape:
-            actual_values = self.critic([state, action])
-            next_values = self.target_critic([next_states, next_actions])
-            expected_values = rewards + gamma * next_values
+            actual_values = tf.squeeze(self.critic([state, action]))
             loss = self.loss_func(actual_values, expected_values)
 
         grads = tape.gradient(loss, self.critic.trainable_variables)
