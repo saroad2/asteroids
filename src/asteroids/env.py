@@ -186,6 +186,25 @@ class AsteroidsEnv(gym.Env):
         rect.midtop = (BLOCK_SIZE * self.width // 2, 0)
         self.screen.blit(img, rect)
 
+    def render_chances(self, left, middle, right):
+        img_left = self.font.render(f"{left:.3f}", False, BLACK)
+        rect_left = img_left.get_rect()
+        rect_left.midleft = (0, BLOCK_SIZE * self.height // 2)
+        self.screen.blit(img_left, rect_left)
+
+        img_center = self.font.render(f"{middle:.3f}", False, BLACK)
+        rect_center = img_center.get_rect()
+        rect_center.center = (
+            BLOCK_SIZE * self.width // 2,
+            BLOCK_SIZE * self.height // 2,
+        )
+        self.screen.blit(img_center, rect_center)
+
+        img_right = self.font.render(f"{right:.3f}", False, BLACK)
+        rect_right = img_right.get_rect()
+        rect_right.midright = (BLOCK_SIZE * self.width, BLOCK_SIZE * self.height // 2)
+        self.screen.blit(img_right, rect_right)
+
     def draw_item(self, x, y, color):
         pygame.draw.rect(
             self.screen,

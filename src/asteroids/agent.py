@@ -73,17 +73,20 @@ class AsteroidsAgent:
         if np.random.uniform() < epsilon:
             action_index = np.random.choice(len(Action))
             return Action(action_index)
-        state_tf = state.reshape((-1, *self.env.state_shape))
-        state_tf = np.repeat(state_tf, repeats=len(Action), axis=0)
-        action_tf = np.identity(len(Action))
-        critic_model = self.target_critic if use_target else self.critic
-        critic_value = critic_model([state_tf, action_tf])
-        critic_value = np.squeeze(critic_value)
+        critic_value = self.get_critic_values(state, use_target)
         counts_sum_log = np.log(self.counts_sum)
         explore_value = explore_factor * counts_sum_log / self.counts
         action_index = np.argmax(critic_value + explore_value)
         self.counts[action_index] += 1
         return Action(action_index)
+
+    def get_critic_values(self, state, use_target):
+        state_tf = state.reshape((-1, *self.env.state_shape))
+        state_tf = np.repeat(state_tf, repeats=len(Action), axis=0)
+        action_tf = np.identity(len(Action))
+        critic_model = self.target_critic if use_target else self.critic
+        critic_value = critic_model([state_tf, action_tf])
+        return np.squeeze(critic_value)
 
     def learn(self, gamma: float):
         state, action, rewards, next_states = self.buffer.batch()

@@ -49,8 +49,10 @@ def auto_play_cli(width, height, chance, growth, star, edge_policy, model_suffix
                     env.reset()
 
         env.render()
+        state = env.state
+        critic_values = agent.get_critic_values(state, use_target=True)
+        env.render_chances(*critic_values)
         if not env.lost:
-            state = env.state
             action = agent.get_action(
                 state=state, explore_factor=0, epsilon=0, use_target=True
             )
