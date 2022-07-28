@@ -9,7 +9,7 @@ def get_critic(env: AsteroidsEnv) -> Model:
     state_out = layers.Conv2D(16, (3, 3), activation="relu")(state_input)
     state_out = layers.MaxPool2D()(state_out)
     state_out = layers.Conv2D(32, (2, 2), activation="relu")(state_out)
-    state_out = layers.MaxPool2D()(state_out)
+    state_out = layers.MaxPool2D(pool_size=(1, 2))(state_out)
     state_out = layers.Flatten()(state_out)
     state_out = layers.Dense(64, activation="relu")(state_out)
 
