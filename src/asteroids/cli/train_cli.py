@@ -109,7 +109,7 @@ def train_cli(
                 f"Loss: {means_dict['loss']:.2f}, "
                 f"Moves: {means_dict['moves'] :.2f}, "
                 f"Score: {scores_mean :.2f}, "
-                f"Explore: {explore_factor:.2f}"
+                f"Explore: {explore_factor:.2e}"
             )
             if scores_mean > 0.6 * max_score:
                 explore_factor = max(explore_factor * explore_decay, MIN_EXPLORE_FACTOR)
