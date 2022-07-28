@@ -78,8 +78,9 @@ class AsteroidsEnv(gym.Env):
     @property
     def state(self):
         state = np.zeros(shape=self.state_shape)
-        if self.player_in_board:
-            state[self.player_position, 0, 0] = 1
+        if self.lost:
+            return state
+        state[self.player_position, 0, 0] = 1
         for asteroid in self.asteroids:
             x, y = asteroid
             state[x, y, 1] = 1
