@@ -8,6 +8,7 @@ class HistoryPoint:
     moves: int
     star_hits: int
     score: float
+    fuel: float
     entropy: float
     loss: float
     explore_factor: float
@@ -22,6 +23,7 @@ class HistoryPoint:
             moves=env.moves,
             star_hits=env.star_hits,
             score=env.score,
+            fuel=env.fuel,
             entropy=env.entropy,
             loss=loss,
             explore_factor=explore_factor,

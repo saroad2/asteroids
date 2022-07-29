@@ -16,6 +16,7 @@ class AsteroidsEnv(gym.Env):
     star_reward = 2
     live_reward = 0.1
     lost_penalty = 1
+    max_fuel = 20
 
     def __init__(
         self,
@@ -41,6 +42,7 @@ class AsteroidsEnv(gym.Env):
         self.actions_count: np.ndarray = np.zeros(shape=(len(Action)))
         self.star_hits = 0
         self.score: float = 0
+        self.fuel = self.max_fuel
         if init_pygame:
             screen_width, screen_height = (
                 self.width * BLOCK_SIZE,
@@ -62,9 +64,10 @@ class AsteroidsEnv(gym.Env):
         self.player_position = self.width // 2
         self.asteroids.clear()
         self.stars.clear()
-        self.actions_count = np.zeros(shape=(len(Action)))
+        self.actions_count.fill(0)
         self.star_hits = 0
         self.score = 0
+        self.fuel = self.max_fuel
         return self.state
 
     @property
@@ -81,6 +84,7 @@ class AsteroidsEnv(gym.Env):
         if self.lost:
             return state
         state[self.player_position, 0, 0] = 1
+        state[0, self.height - 1, 0] = self.fuel / self.max_fuel
         for asteroid in self.asteroids:
             x, y = asteroid
             state[x, y, 1] = 1
@@ -91,6 +95,8 @@ class AsteroidsEnv(gym.Env):
 
     @property
     def lost(self):
+        if self.fuel <= 0:
+            return True
         if not self.player_in_board:
             return True
         for asteroid in self.asteroids:
@@ -117,6 +123,7 @@ class AsteroidsEnv(gym.Env):
         return entropy
 
     def step(self, action: Action):
+        self.fuel -= action.fuel_cost()
         self.player_position = action.update_position(
             position=self.player_position,
             width=self.width,
@@ -129,6 +136,8 @@ class AsteroidsEnv(gym.Env):
             if last_star[0] == self.player_position:
                 hit_star = True
                 self.star_hits += 1
+        if hit_star:
+            self.fuel = self.max_fuel
         reward = self.get_reward(hit_star=hit_star)
         self.score += reward
         self.actions_count[action.value] += 1
@@ -179,7 +188,7 @@ class AsteroidsEnv(gym.Env):
         img = self.font.render(
             f"Score: {self.score:.2f}, "
             f"Moves: {self.moves}, "
-            f"Star hits: {self.star_hits}",
+            f"Fuel: {self.fuel / self.max_fuel * 100:.2f}%",
             False,
             BLACK,
         )

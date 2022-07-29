@@ -2,6 +2,7 @@ from enum import IntEnum
 
 import numpy as np
 
+from asteroids.constants import MOVEMENT_FUEL_COST
 from asteroids.edge_policy import EdgePolicy
 
 
@@ -22,3 +23,8 @@ class Action(IntEnum):
         return edge_policy.convert_position(
             position=position + self.to_step(), width=width
         )
+
+    def fuel_cost(self):
+        if self == Action.NOOP:
+            return 0
+        return MOVEMENT_FUEL_COST
